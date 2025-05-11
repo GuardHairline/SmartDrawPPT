@@ -1,4 +1,10 @@
 # src/input_handler.py
+import os
+import mimetypes
+from typing import Union
+from docx import Document
+from PyPDF2 import PdfReader
+
 def detect_input_type(input_data: Union[str, bytes]) -> str:
     """
     判断输入数据是纯文本还是文档文件。

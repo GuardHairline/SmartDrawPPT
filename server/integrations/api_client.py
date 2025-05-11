@@ -11,7 +11,7 @@ METHOD = 'POST'
 
 # 加载配置：AppID 与 AppKEY 存于 config/settings.yaml
 def load_config():
-    with open(os.path.join(os.path.dirname(__file__), '..', 'config', 'settings.yaml'), 'r') as f:
+    with open(os.path.join(os.path.dirname(__file__), '../..', 'config', 'settings.yaml'), 'r') as f:
         cfg = yaml.safe_load(f)
     return cfg['AppID'], cfg['AppKEY']
 

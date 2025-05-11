@@ -1,6 +1,6 @@
-from src.input_handler import load_content
-from src.layout_engine import intelligent_layout
-from src.ppt_generator import generate_ppt
+from server.services.input_handler import load_content
+from server.services.layout_engine import intelligent_layout
+from server.services.ppt_generator import generate_ppt
 
 
 if __name__ == "__main__":
