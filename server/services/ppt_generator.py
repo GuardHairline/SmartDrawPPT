@@ -1,98 +1,189 @@
 from pptx import Presentation
 from pptx.util import Inches, Pt
 import math
+from pptx.enum.text import PP_ALIGN
+import os
+import json
 
-
-def set_font(para, font_size, font_name="Microsoft YaHei"):
+# 设置字体
+def set_font(placeholder, font_size, font_name="Microsoft YaHei"):
     """
     设置段落的字体和字号
     """
-    for run in para.runs:
-        run.font.size = Pt(font_size)
-        run.font.name = font_name
-        run.font.bold = None  # 设置为非加粗，可以根据需要进行调整
-
-
-def add_title_slide(prs, headline, subheading):
-    slide = prs.slides.add_slide(prs.slide_layouts[0])  # 主标题和副标题布局
-    title = slide.shapes.title
-    subtitle = slide.placeholders[1]
-    title.text = headline
-    subtitle.text = subheading
-
-    set_font(title, 50)  # 主标题字号
-    set_font(subtitle, 32)  # 副标题字号
-
-
-def adjust_font_size(shape, max_font_size):
-    """
-    调整字体大小，使其适应文本框的大小。确保字体大小在合理范围内（100 到 400000之间）。
-    """
-    text = shape.text
-    char_count = len(text)
-
-    # 确保计算出的 font_size 不会小于 100 或大于 400000
-    if char_count > 50:
-        font_size = max_font_size - math.floor(char_count / 2)
-    else:
-        font_size = max_font_size
-
-    # 限制字体大小范围
-    font_size = max(100, min(font_size, 400000))
-
-    for paragraph in shape.text_frame.paragraphs:
+    for paragraph in placeholder.text_frame.paragraphs:
         for run in paragraph.runs:
             run.font.size = Pt(font_size)
+            run.font.name = font_name
+            run.font.bold = None  # 可根据需要调整
+
+# 适应文本框
+def fit_text_to_box(shape, text, max_font_size=32, min_font_size=14):
+    # 先设置最大字号
+    shape.text = text
+    for paragraph in shape.text_frame.paragraphs:
+        for run in paragraph.runs:
+            run.font.size = Pt(max_font_size)
+    # 简单估算：如果字符数过多，缩小字号
+    char_count = len(text)
+    if char_count > 100:
+        font_size = max(min_font_size, max_font_size - (char_count - 100) // 5)
+        for paragraph in shape.text_frame.paragraphs:
+            for run in paragraph.runs:
+                run.font.size = Pt(font_size)
+
+# 添加封面
+def add_cover_slide(prs, title, subtitle):
+    slide = prs.slides.add_slide(prs.slide_layouts[0])
+    slide.shapes.title.text = title
+    slide.placeholders[1].text = subtitle
+    set_font(slide.shapes.title, 48)
+    set_font(slide.placeholders[1], 28)
+    # 可加logo、背景色等美化
+
+# 添加目录
+def add_toc_slide(prs, toc_list):
+    slide = prs.slides.add_slide(prs.slide_layouts[1])
+    slide.shapes.title.text = "目录"
+    content_shape = slide.placeholders[1]
+    content_shape.text = ""
+    for idx, item in enumerate(toc_list, 1):
+        p = content_shape.text_frame.add_paragraph()
+        p.text = f"{idx}. {item}"
+        p.level = 0
+    set_font(slide.shapes.title, 36)
+    set_font(content_shape, 24)
+
+# 添加章节
+def add_section_slide(prs, section_title):
+    slide = prs.slides.add_slide(prs.slide_layouts[5])  # 空白页
+    left = top = Inches(2)
+    width = height = Inches(6)
+    txBox = slide.shapes.add_textbox(left, top, width, height)
+    tf = txBox.text_frame
+    p = tf.add_paragraph()
+    p.text = section_title
+    p.font.size = Pt(44)
+    p.font.bold = True
+    p.alignment = PP_ALIGN.CENTER
+
+# 添加小标题
+def add_content_slide(prs, title, content, para_ids, mapping, page_num, subtitle_font_size=20):
+    slide = prs.slides.add_slide(prs.slide_layouts[1])
+    shape = slide.shapes.title
+    shape.text = title
+    # 设置主标题字体
+    for paragraph in shape.text_frame.paragraphs:
+        for run in paragraph.runs:
+            run.font.size = Pt(subtitle_font_size if "——" in title else 32)
+            run.font.name = "Microsoft YaHei"
+    content_shape = slide.placeholders[1]
+    fit_text_to_box(content_shape, content)
+    mapping[str(page_num)] = para_ids
 
 
-def add_text_slide(prs, title, text, title_size=30, text_size=18):
-    slide = prs.slides.add_slide(prs.slide_layouts[1])  # 文字内容布局
-    title_placeholder = slide.shapes.title
-    body = slide.shapes.placeholders[1]
+# 分割内容
+def split_content(text, max_chars=300):
+    # 按最大字符数分割
+    return [text[i:i+max_chars] for i in range(0, len(text), max_chars)]
 
-    title_placeholder.text = title
-    set_font(title_placeholder, title_size)  # 设置标题字体大小
-    body.text = text
-    set_font(body, text_size)  # 设置正文字体大小
+# 添加多内容
+def add_multi_content_slide(prs, title, content):
+    parts = split_content(content)
+    for part in parts:
+        add_content_slide(prs, title, part)
 
-    # 设置正文首行缩进
-    for para in body.text_frame.paragraphs:
-        para.level = 0
-        para.font.size = Pt(text_size)
-        para.space_before = Inches(0.05)  # 设置段落之间的间距
-        para.text_frame.paragraph_format.first_line_indent = Inches(0.5)  # 设置首行缩进
+# 分组内容
+def group_content_items(items, max_items_per_slide=5, max_chars_per_slide=300):
+    slides = []
+    current_slide = []
+    current_chars = 0
+    for item in items:
+        if (len(current_slide) >= max_items_per_slide) or (current_chars + len(item['text']) > max_chars_per_slide):
+            slides.append(current_slide)
+            current_slide = []
+            current_chars = 0
+        current_slide.append(item)
+        current_chars += len(item['text'])
+    if current_slide:
+        slides.append(current_slide)
+    return slides
 
+# 获取幻灯片标题
+def get_slide_title(section, subsection):
+    if subsection:
+        return f"{section} —— {subsection}"
+    else:
+        return section
 
-def create_ppt(content):
+# 生成PPT
+def generate_ppt(doc_id, structure):
+    structure = get_structure_for_ppt(doc_id)
     prs = Presentation()
+    mapping = {}
+    page_num = 1
 
-    # 第一页 - 主标题和副标题
-    add_title_slide(prs, content[0]["headline"], content[0]["subheading"])
+    # 1. 封面
+    add_cover_slide(prs, "智绘PPT", "专业内容自动生成")
+    mapping[str(page_num)] = ["cover"]  # 封面不对应原文
+    page_num += 1
 
-    # 分页处理正文
-    for slide_content in content:
-        text = slide_content['text']
-        title = f"{slide_content.get('title1', '')} —— {slide_content.get('title2', '')}"
+    # 2. 目录页（只列出一级标题）
+    toc_titles = [item['text'] for item in structure if item.get('type') == 'title' and item.get('level') == 1]
+    add_toc_slide(prs, toc_titles)
+    mapping[str(page_num)] = []
+    page_num += 1
 
-        # 如果正文太长，分割成多页
-        paragraphs = [text[i:i + 200] for i in range(0, len(text), 200)]
-        for paragraph in paragraphs:
-            add_text_slide(prs, title, paragraph)
+    # 3. 内容
+    current_section = None
+    current_section_id = None
+    current_subsection = None
+    content_items = []
 
-    prs.save("output/output_ppt.pptx")
-    print("PPT 已生成并保存。")
+    def flush_content():
+        nonlocal page_num, content_items, current_section, current_subsection
+        if current_section and content_items:
+            slides = group_content_items(content_items)
+            for slide_items in slides:
+                slide_title = get_slide_title(current_section, current_subsection)
+                content = "\n".join([f"• {i['text']}" for i in slide_items if i.get('type') == 'paragraph' or i.get('type') == 'subtitle'])
+                para_ids = [i['id'] for i in slide_items if i.get('type') == 'paragraph']
+                add_content_slide(prs, slide_title, content, para_ids, mapping, page_num, subtitle_font_size=20)
+                page_num += 1
+            content_items = []
+
+    for item in structure:
+        if item.get('type') == 'title' and item.get('level') == 1:
+            flush_content()
+            current_section = item['text']
+            current_section_id = item['id']
+            current_subsection = None
+            add_section_slide(prs, current_section)
+            mapping[str(page_num)] = [current_section_id]
+            page_num += 1
+        elif item.get('type') == 'subtitle' and item.get('level') == 2:
+            flush_content()
+            current_subsection = item['text']
+        else:
+            content_items.append(item)
+    # 处理最后一节
+    flush_content()
+
+    ppt_path = f"output/{doc_id}.pptx"
+    prs.save(ppt_path)
+    # 保存映射表
+    with open(f"output/{doc_id}_mapping.json", "w", encoding="utf-8") as f:
+        json.dump(mapping, f, ensure_ascii=False)
+    return ppt_path
+
+def get_structure_for_ppt(doc_id):
+    middle_path = f"output/{doc_id}_middle.json"
+    structure_path = f"output/{doc_id}_structure.json"
+    if os.path.exists(middle_path):
+        with open(middle_path, encoding="utf-8") as f:
+            return json.load(f)
+    else:
+        with open(structure_path, encoding="utf-8") as f:
+            return json.load(f)
 
 
-# 示例内容
-content = [
-    {
-        "headline": "主标题",
-        "subheading": "副标题",
-        "title1": "标题一",
-        "title2": "标题二",
-        "title3": "标题三",
-        "text": "正文内容..." * 30  # 模拟超长文本
-    }
-]
 
-create_ppt(content)

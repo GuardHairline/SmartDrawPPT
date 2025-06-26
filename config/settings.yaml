@@ -1,2 +1,6 @@
-AppID: "your_app_id_here"
-AppKEY: "your_app_key_here"
+AppID: 2025703335
+AppKEY: KGBovLFLFkrdkcFs
+server:
+  host: 0.0.0.0
+  port: 8000
+  reload: true

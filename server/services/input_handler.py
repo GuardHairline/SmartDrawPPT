@@ -43,3 +43,25 @@ def load_content(input_data: Union[str, bytes]) -> str:
         return "\n".join(pages)
     else:
         raise ValueError(f"无法处理的文件类型：{itype}")
+
+def parse_doc_structure(doc_id, filename):
+    path = f"user_input/{doc_id}_{filename}"
+    ext = os.path.splitext(filename)[-1].lower()
+    structure = []
+    if ext == ".docx":
+        doc = Document(path)
+        for i, para in enumerate(doc.paragraphs):
+            if para.text.strip():
+                if para.style.name == "Heading 1":
+                    structure.append({"id": f"title{i}", "text": para.text.strip(), "type": "title", "level": 1})
+                elif para.style.name == "Heading 2":
+                    structure.append({"id": f"subtitle{i}", "text": para.text.strip(), "type": "subtitle", "level": 2})
+                else:
+                    structure.append({"id": f"para{i}", "text": para.text.strip(), "type": "paragraph"})
+    elif ext == ".txt":
+        with open(path, encoding="utf-8") as f:
+            lines = f.readlines()
+        for i, line in enumerate(lines):
+            if line.strip():
+                structure.append({"id": f"para{i}", "text": line.strip(), "type": "paragraph"})
+    return structure
