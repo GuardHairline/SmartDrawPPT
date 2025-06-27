@@ -48,10 +48,19 @@ def parse_doc_structure(doc_id, filename):
     path = f"user_input/{doc_id}_{filename}"
     ext = os.path.splitext(filename)[-1].lower()
     structure = []
+    title_keywords = ['1.', '一、', '引言']
     if ext == ".docx":
         doc = Document(path)
-        for i, para in enumerate(doc.paragraphs):
-            if para.text.strip():
+        paras = [para for para in doc.paragraphs if para.text.strip()]
+        if paras:
+            first_text = paras[0].text.strip()
+            if not any(kw in first_text for kw in title_keywords):
+                # 首句为标题
+                structure.append({"id": "title0", "text": first_text, "type": "title", "level": 1})
+                start_idx = 1
+            else:
+                start_idx = 0
+            for i, para in enumerate(paras[start_idx:], start=start_idx):
                 if para.style.name == "Heading 1":
                     structure.append({"id": f"title{i}", "text": para.text.strip(), "type": "title", "level": 1})
                 elif para.style.name == "Heading 2":
@@ -60,8 +69,14 @@ def parse_doc_structure(doc_id, filename):
                     structure.append({"id": f"para{i}", "text": para.text.strip(), "type": "paragraph"})
     elif ext == ".txt":
         with open(path, encoding="utf-8") as f:
-            lines = f.readlines()
-        for i, line in enumerate(lines):
-            if line.strip():
-                structure.append({"id": f"para{i}", "text": line.strip(), "type": "paragraph"})
+            lines = [line.strip() for line in f if line.strip()]
+        if lines:
+            first_text = lines[0]
+            if not any(kw in first_text for kw in title_keywords):
+                structure.append({"id": "title0", "text": first_text, "type": "title", "level": 1})
+                start_idx = 1
+            else:
+                start_idx = 0
+            for i, line in enumerate(lines[start_idx:], start=start_idx):
+                structure.append({"id": f"para{i}", "text": line, "type": "paragraph"})
     return structure

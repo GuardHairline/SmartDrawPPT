@@ -1,14 +1,19 @@
-from fastapi import APIRouter, Body, Query
+from fastapi import APIRouter, Body, Query, HTTPException
 from fastapi.responses import FileResponse
 import os, json
-from services.ppt_generator import generate_ppt
+from services.ppt_generator import generate_ppt, generate_ppt_with_template
 from services.ppt_to_image import ppt_to_images
 
 router = APIRouter()
 
 @router.post("/generate")
-def generate(doc_id: str = Body(...), structure: list = Body(...)):
-    ppt_path = generate_ppt(doc_id, structure)
+def generate(doc_id: str = Body(...), structure: list = Body(...), template: str = Body('none')):
+    if template in ('none', '', None):
+        ppt_path = generate_ppt(doc_id, structure)
+    else:
+        ppt_path = generate_ppt_with_template(doc_id, structure, template)
+    if not os.path.exists(ppt_path):
+        raise HTTPException(status_code=500, detail=f'PPT文件未生成: {ppt_path}')
     img_dir = f"output/{doc_id}_images"
     ppt_to_images(ppt_path, img_dir)
     return {"ppt_url": ppt_path}
@@ -37,3 +42,23 @@ def get_mapping(doc_id: str = Query(...)):
     with open(f"output/{doc_id}_mapping.json", encoding="utf-8") as f:
         mapping = json.load(f)
     return mapping
+
+@router.get('/download')
+def download_ppt(doc_id: str):
+    # 获取当前文件（ppt.py）所在目录
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    ppt_path = os.path.join(base_dir, 'output', f'{doc_id}.pptx')
+    # print('PPT绝对路径:', ppt_path)
+    if not os.path.exists(ppt_path):
+        raise HTTPException(status_code=404, detail='PPT文件不存在')
+    return FileResponse(ppt_path, filename=f'{doc_id}.pptx', media_type='application/vnd.openxmlformats-officedocument.presentationml.presentation')
+
+@router.get("/template_list")
+def get_template_list():
+    template_dir = "server/templates"
+    templates = []
+    for fname in os.listdir(template_dir):
+        if fname.endswith(".pptx"):
+            name = os.path.splitext(fname)[0]
+            templates.append(name)
+    return {"templates": templates}

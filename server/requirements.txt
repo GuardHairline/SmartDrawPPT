@@ -1,5 +1,41 @@
-fastapi
-uvicorn
-python-docx
-python-pptx
-pydantic
+# Web框架和服务器
+fastapi==0.104.1
+uvicorn[standard]==0.24.0
+
+# 文档处理
+python-docx==1.1.0
+python-pptx==0.6.23
+PyPDF2==3.0.1
+
+# 数据验证和序列化
+pydantic==2.5.0
+
+# HTTP请求
+requests==2.31.0
+
+# 配置文件处理
+PyYAML==6.0.1
+
+# 文件类型检测
+python-multipart==0.0.6
+
+# 图像处理（用于PPT转图片）
+Pillow==10.1.0
+
+# Windows COM组件（用于PPT转图片）
+comtypes==1.2.0
+
+# 类型提示支持
+typing-extensions==4.8.0
+
+# 开发工具（可选）
+python-dotenv==1.0.0
+
+# 日志处理
+loguru==0.7.2
+
+# 异步支持
+aiofiles==23.2.1
+
+# 跨域支持
+fastapi-cors==0.0.6

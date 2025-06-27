@@ -114,7 +114,6 @@ def get_slide_title(section, subsection):
         return f"{section} —— {subsection}"
     else:
         return section
-
 # 生成PPT
 def generate_ppt(doc_id, structure):
     structure = get_structure_for_ppt(doc_id)
@@ -174,6 +173,55 @@ def generate_ppt(doc_id, structure):
     with open(f"output/{doc_id}_mapping.json", "w", encoding="utf-8") as f:
         json.dump(mapping, f, ensure_ascii=False)
     return ppt_path
+# 生成PPT
+def generate_ppt_with_template(doc_id, structure, template='none'):
+    if template == 'none':
+        prs = Presentation()  # 空白PPT
+        # 用默认代码生成各页
+        # ...
+    else:
+        template_path = f"server/templates/{template}.pptx"
+        config_path = f"server/template_configs/{template}.json"
+        prs = Presentation(template_path)
+        with open(config_path, encoding='utf-8') as f:
+            config = json.load(f)
+        mapping = {}
+        page_num = 1
+
+        # 标题页
+        fill_title_slide(prs.slides[0], structure, config['title'])
+        mapping[str(page_num)] = ['title']  # 假设title页只对应title
+        page_num += 1
+
+        # 目录页
+        fill_toc_slide(prs.slides[1], structure, config['toc'])
+        mapping[str(page_num)] = []  # 目录页不映射原文
+        page_num += 1
+
+        # 章节页、内容页
+        # 遍历结构化内容，遇到章节/内容时分别填充，并记录映射
+        # 例如：
+        for section in sections:
+            fill_section_slide(prs.slides[page_num], section['text'], config['section'])
+            mapping[str(page_num)] = [section['id']]
+            page_num += 1
+            for para in section['paras']:
+                fill_content_slide(prs.slides[page_num], para['title'], para['content'], config['content'])
+                mapping[str(page_num)] = [para['id']]
+                page_num += 1
+
+        # 结束页
+        fill_end_slide(prs.slides[page_num], "感谢聆听", config['end'])
+        mapping[str(page_num)] = ['end']
+
+        # 保存映射
+        with open(f'output/{doc_id}_mapping.json', 'w', encoding='utf-8') as f:
+            json.dump(mapping, f, ensure_ascii=False)
+        ppt_path = f"output/{doc_id}.pptx"
+        os.makedirs(os.path.dirname(ppt_path), exist_ok=True)
+        # 保存PPT
+        prs.save(ppt_path)
+    return f'output/{doc_id}.pptx'
 
 def get_structure_for_ppt(doc_id):
     middle_path = f"output/{doc_id}_middle.json"

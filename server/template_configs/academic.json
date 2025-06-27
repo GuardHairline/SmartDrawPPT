@@ -1,0 +1,42 @@
+{
+  "title": {
+    "placeholder_idx": 0,
+    "font_size": 48,
+    "font_color": "#1976d2",
+    "font_name": "微软雅黑",
+    "align": "center"
+  },
+  "toc": {
+    "placeholder_idx": 1,
+    "font_size": 32,
+    "font_color": "#333",
+    "font_name": "微软雅黑",
+    "align": "left",
+    "item_spacing": 40,
+    "start_top": 120
+  },
+  "section": {
+    "placeholder_idx": 0,
+    "font_size": 36,
+    "font_color": "#1976d2",
+    "font_name": "微软雅黑",
+    "align": "center"
+  },
+  "content": {
+    "title_placeholder_idx": 0,
+    "content_placeholder_idx": 1,
+    "title_font_size": 28,
+    "title_font_color": "#1976d2",
+    "content_font_size": 22,
+    "content_font_color": "#222",
+    "font_name": "微软雅黑",
+    "align": "left"
+  },
+  "end": {
+    "placeholder_idx": 0,
+    "font_size": 36,
+    "font_color": "#888",
+    "font_name": "微软雅黑",
+    "align": "center"
+  }
+}

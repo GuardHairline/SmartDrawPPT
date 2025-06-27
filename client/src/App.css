@@ -36,3 +36,25 @@
     transform: rotate(360deg);
   }
 }
+/* 柔和分割线样式 */
+.SplitPane .Resizer {
+  background: #e0e0e0 !important;
+  /* MUI主色 */
+  opacity: 1 !important;
+  z-index: 10;
+  box-shadow: none;
+  transition: all 0.2s;
+}
+
+.SplitPane .Resizer:hover {
+  background: #bdbdbd !important;
+  box-shadow: 0 0 8px #bdbdbd88;
+  cursor: col-resize;
+}
+
+.SplitPane .Resizer.vertical {
+  width: 7px !important;
+  /* 分割线宽度 */
+  margin: 0 -3.5px;
+  border-radius: 4px;
+}

@@ -3,6 +3,8 @@ import comtypes
 import os
 
 def ppt_to_images(ppt_path, output_dir):
+    if not os.path.exists(ppt_path):
+        raise FileNotFoundError(f"PPT文件未生成: {ppt_path}")
     comtypes.CoInitialize()  # 关键：初始化COM
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)

@@ -84,6 +84,20 @@ def parse_content(content: str) -> list:
     return slides
 
 
+def analyze_doc_structure(paragraphs):
+    title_keywords = ['1.', '一、', '引言']
+    first_para = paragraphs[0].strip()
+    if not any(kw in first_para for kw in title_keywords):
+        structure = [{'id': 0, 'text': first_para, 'type': 'title'}]
+        # 其余段落正常结构化
+        for idx, para in enumerate(paragraphs[1:], 1):
+            structure.append({'id': idx, 'text': para, 'type': 'content'})
+    else:
+        # 全部按正文处理
+        structure = [{'id': idx, 'text': para, 'type': 'content'} for idx, para in enumerate(paragraphs)]
+    return structure
+
+
 # 示例：调用生成排版的功能
 if __name__ == "__main__":
     text_content = "这是主标题和副标题的内容示例，以下是正文内容，假设这是一个长文档，包含多个段落。可以根据要求分为多个页面..."
