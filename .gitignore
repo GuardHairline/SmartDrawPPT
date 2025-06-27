@@ -77,11 +77,83 @@ fabric.properties
 # Android studio 3.1+ serialized cache file
 .idea/caches/build_file_checksums.ser
 
-.docx
-.pdf
-.txt
-.jpg
-.json
-.ppt
-.pptx
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.yarn-integrity
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Project specific
+# 忽略doc文件夹下的所有文件和子目录
+doc/
+# 忽略output和user_input文件夹下的所有文件和子目录
+server/output/
+server/user_input/
+# 忽略生成的PPT文件
+*.pptx
+# 忽略生成的图片文件
+*.jpg
+*.jpeg
+*.png
+*.gif
+# 忽略日志文件
+*.log
+# 忽略临时文件
+*.tmp
+*.temp
 
